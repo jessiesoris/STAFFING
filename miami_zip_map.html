@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Miami Nurse & HHA ZIP Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    .leaflet-popup-content {
+      font-family: sans-serif;
+      font-size: 14px;
+    }
+    .search-box {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    input[type="text"] {
+      padding: 4px;
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div class="search-box">
+    <input type="text" id="zipSearch" placeholder="Search ZIP Code..." />
+    <button onclick="searchZip()">Search</button>
+  </div>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([25.76, -80.19], 10);
+
+    // Black & white base map
+    L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const pins = [];
+
+    // Load the ZIP map data
+    fetch('miami_zip_map_data.json')
+      .then(response => response.json())
+      .then(data => {
+        data.forEach(item => {
+          const marker = L.marker([item.lat, item.lon])
+            .addTo(map)
+            .bindPopup(item.popup);
+          marker.zip = item.zipcode;
+          pins.push(marker);
+        });
+      });
+
+    function searchZip() {
+      const input = document.getElementById("zipSearch").value.trim();
+      const found = pins.find(p => p.zip === input);
+      if (found) {
+        map.setView(found.getLatLng(), 13);
+        found.openPopup();
+      } else {
+        alert("ZIP Code not found.");
+      }
+    }
+  </script>
+</body>
+</html>
